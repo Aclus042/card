@@ -1335,6 +1335,143 @@ a:hover {
     margin-bottom: var(--spacing-sm);
 }
 
+/* Image Upload Section */
+.image-upload-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.image-preview {
+    position: relative;
+    width: 220px;
+    height: 300px;
+    background: var(--color-bg-tertiary);
+    border: 2px dashed var(--color-border-light);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    margin: 0 auto;
+}
+
+.image-preview:hover {
+    border-color: var(--color-accent);
+    background: var(--color-bg-elevated);
+}
+
+.image-preview.has-image {
+    border-style: solid;
+    border-color: var(--color-border);
+    cursor: grab;
+}
+
+.image-preview.has-image:active,
+.image-preview.dragging {
+    cursor: grabbing;
+}
+
+.image-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    color: var(--color-text-muted);
+}
+
+.placeholder-icon {
+    font-size: 3rem;
+    opacity: 0.5;
+}
+
+.placeholder-text {
+    font-size: 0.875rem;
+}
+
+#preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Object position is now set dynamically via JavaScript */
+
+.remove-image-btn {
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.7);
+    border: none;
+    border-radius: var(--radius-full);
+    color: white;
+    font-size: 1.25rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    z-index: 10;
+}
+
+.remove-image-btn:hover {
+    background: #dc3545;
+    transform: scale(1.1);
+}
+
+.image-position-controls {
+    padding: var(--spacing-sm) 0 0 0;
+}
+
+.position-hint {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    text-align: center;
+    margin: 0;
+}
+
+
+
+#preview-img {
+    width: 100%;
+    height: calc(100% - 50px);
+    object-fit: cover;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: none;
+}
+
+/* Preview card name bar */
+.preview-name-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 50px;
+    background: var(--color-bg-card);
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 var(--spacing-md);
+}
+
+.preview-name-bar span {
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+    text-align: center;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .form-row {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -1826,6 +1963,37 @@ textarea {
     .btn-primary,
     .btn-secondary {
         width: 100%;
+    }
+    
+    /* Image upload mobile */
+    .image-preview {
+        width: 200px;
+        height: 270px;
+    }
+    
+    #preview-img {
+        height: calc(100% - 45px);
+    }
+    
+    .preview-name-bar {
+        height: 45px;
+    }
+    
+    .preview-name-bar span {
+        font-size: 0.85rem;
+    }
+    
+    /* Card back with image mobile */
+    .card-back-image {
+        height: calc(100% - 45px);
+    }
+    
+    .card-back-info {
+        height: 45px;
+    }
+    
+    .card-back-info .card-back-label {
+        font-size: 0.85rem;
     }
     
     .toast-container {
@@ -2519,6 +2687,97 @@ textarea {
     line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+}
+
+/* Card Back with Image */
+.flip-card-front.has-image {
+    padding: 0;
+    overflow: hidden;
+}
+
+.flip-card-front.has-image::before,
+.flip-card-front.has-image::after {
+    display: none;
+}
+
+.card-back-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: calc(100% - 50px);
+    overflow: hidden;
+}
+
+.card-back-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--transition-slow);
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-user-drag: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-drag: none;
+}
+
+/* Object position is set dynamically via inline style */
+
+.flip-card:hover .card-back-image img {
+    transform: scale(1.05);
+}
+
+.card-back-image-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: linear-gradient(to top, rgba(10, 10, 15, 0.95) 0%, transparent 100%);
+    pointer-events: none;
+}
+
+.card-back-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 50px;
+    padding: 0 var(--spacing-md);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--color-bg-card);
+    border-top: 1px solid var(--color-border);
+}
+
+.card-back-info .card-back-label {
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    color: var(--color-text-primary);
+    max-width: 100%;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Type-specific image card styling */
+.flip-card-front.has-image.evento .card-back-info {
+    border-top-color: var(--color-evento-border);
+    background: linear-gradient(135deg, var(--color-bg-card) 0%, rgba(245, 158, 107, 0.05) 100%);
+}
+
+.flip-card-front.has-image.local .card-back-info {
+    border-top-color: var(--color-local-border);
+    background: linear-gradient(135deg, var(--color-bg-card) 0%, rgba(107, 179, 245, 0.05) 100%);
+}
+
+.flip-card-front.has-image.personagem .card-back-info {
+    border-top-color: var(--color-personagem-border);
+    background: linear-gradient(135deg, var(--color-bg-card) 0%, rgba(176, 136, 245, 0.05) 100%);
 }
 
 /* Hover effects - only on devices that support hover */

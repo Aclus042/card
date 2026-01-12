@@ -325,13 +325,51 @@ class UIController {
             }
         }
         
+        // Build card back content based on whether there's an image
+        let cardBackContent = '';
+        const hasImage = card.image && card.image.length > 0;
+        
+        // Get image positions (handle legacy)
+        let imagePositionX = 50;
+        let imagePositionY = 50;
+        
+        if (card.imagePositionX !== undefined) {
+            imagePositionX = card.imagePositionX ?? 50;
+            imagePositionY = card.imagePositionY ?? 50;
+        } else if (card.imagePosition !== undefined) {
+            // Legacy: convert single position to Y
+            if (typeof card.imagePosition === 'string') {
+                if (card.imagePosition === 'top') imagePositionY = 0;
+                else if (card.imagePosition === 'bottom') imagePositionY = 100;
+                else imagePositionY = 50;
+            } else {
+                imagePositionY = card.imagePosition ?? 50;
+            }
+        }
+        
+        if (hasImage) {
+            cardBackContent = `
+                <div class="card-back-image">
+                    <img src="${card.image}" alt="${this.escapeHtml(card.name)}" style="object-position: ${imagePositionX}% ${imagePositionY}%;">
+                    <div class="card-back-image-overlay"></div>
+                </div>
+                <div class="card-back-info">
+                    <span class="card-back-label">${this.escapeHtml(card.name)}</span>
+                </div>
+            `;
+        } else {
+            cardBackContent = `
+                <span class="card-back-symbol">${icon}</span>
+                <span class="card-back-label">${this.escapeHtml(card.name)}</span>
+            `;
+        }
+        
         return `
             <div class="flip-card" data-card-id="${card.id}" onclick="toggleFlipCard(event, '${card.id}')">
                 <div class="flip-card-inner">
                     <!-- Back of card (face down) -->
-                    <div class="flip-card-front ${card.type}">
-                        <span class="card-back-symbol">${icon}</span>
-                        <span class="card-back-label">${this.escapeHtml(card.name)}</span>
+                    <div class="flip-card-front ${card.type}${hasImage ? ' has-image' : ''}">
+                        ${cardBackContent}
                     </div>
                     
                     <!-- Front of card (face up - info) -->
@@ -836,10 +874,16 @@ class UIController {
             return;
         }
 
+        // Get image data
+        const imageData = getCardImageData();
+
         const cardData = {
             type: this.selectedType,
             name: name,
-            description: document.getElementById('card-description').value.trim()
+            description: document.getElementById('card-description').value.trim(),
+            image: imageData.image,
+            imagePositionX: imageData.imagePositionX,
+            imagePositionY: imageData.imagePositionY
         };
 
         // Type-specific fields
@@ -892,6 +936,14 @@ class UIController {
         // Populate common fields
         document.getElementById('card-name').value = card.name || '';
         document.getElementById('card-description').value = card.description || '';
+        
+        // Load image data (handle legacy single position)
+        if (card.imagePositionX !== undefined) {
+            setCardImageData(card.image, card.imagePositionX, card.imagePositionY);
+        } else {
+            // Legacy: imagePosition was single value for Y
+            setCardImageData(card.image, card.imagePosition);
+        }
 
         // Populate type-specific fields
         if (card.type === 'evento') {
@@ -969,6 +1021,9 @@ class UIController {
 
         // Clear all inputs
         document.getElementById('card-form').reset();
+
+        // Clear image data
+        clearCardImageData();
 
         // Clear connection containers
         document.getElementById('selected-adjacent').innerHTML = '';
@@ -1064,6 +1119,7 @@ let ui;
 function initApp() {
     dataStore = new DataStore();
     ui = new UIController(dataStore);
+    initImageUpload();
 }
 
 function showView(view) {
@@ -1267,6 +1323,245 @@ function importCards(event) {
     
     // Reset input so the same file can be selected again
     event.target.value = '';
+}
+
+// =====================================================
+// IMAGE UPLOAD FUNCTIONS
+// =====================================================
+
+let currentCardImage = null;
+let currentImagePositionX = 50; // Percentage (0-100), 50 = center
+let currentImagePositionY = 50; // Percentage (0-100), 50 = center
+
+// Drag state for image positioning
+let imageDragState = {
+    isDragging: false,
+    startX: 0,
+    startY: 0,
+    startPositionX: 50,
+    startPositionY: 50
+};
+
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+        ui.showToast('Por favor, selecione um arquivo de imagem', 'error');
+        return;
+    }
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        ui.showToast('A imagem deve ter no máximo 5MB', 'error');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        currentCardImage = e.target.result;
+        currentImagePositionX = 50; // Reset to center for new image
+        currentImagePositionY = 50;
+        showImagePreview(currentCardImage);
+    };
+    reader.readAsDataURL(file);
+}
+
+function showImagePreview(imageSrc) {
+    const preview = document.getElementById('image-preview');
+    const previewImg = document.getElementById('preview-img');
+    const placeholder = document.getElementById('image-placeholder');
+    const removeBtn = document.getElementById('remove-image-btn');
+    const positionControls = document.getElementById('image-position-controls');
+    const nameBar = document.getElementById('preview-name-bar');
+    
+    previewImg.src = imageSrc;
+    previewImg.style.display = 'block';
+    previewImg.style.objectPosition = `${currentImagePositionX}% ${currentImagePositionY}%`;
+    placeholder.style.display = 'none';
+    removeBtn.style.display = 'flex';
+    positionControls.style.display = 'block';
+    nameBar.style.display = 'flex';
+    preview.classList.add('has-image');
+    
+    // Update name in preview
+    updatePreviewName();
+}
+
+function hideImagePreview() {
+    const preview = document.getElementById('image-preview');
+    const previewImg = document.getElementById('preview-img');
+    const placeholder = document.getElementById('image-placeholder');
+    const removeBtn = document.getElementById('remove-image-btn');
+    const positionControls = document.getElementById('image-position-controls');
+    const nameBar = document.getElementById('preview-name-bar');
+    
+    previewImg.src = '';
+    previewImg.style.display = 'none';
+    previewImg.style.objectPosition = '';
+    placeholder.style.display = 'flex';
+    removeBtn.style.display = 'none';
+    positionControls.style.display = 'none';
+    nameBar.style.display = 'none';
+    preview.classList.remove('has-image');
+}
+
+function removeCardImage() {
+    currentCardImage = null;
+    currentImagePositionX = 50;
+    currentImagePositionY = 50;
+    hideImagePreview();
+    document.getElementById('card-image').value = '';
+}
+
+function initImageUpload() {
+    const preview = document.getElementById('image-preview');
+    const fileInput = document.getElementById('card-image');
+    const previewImg = document.getElementById('preview-img');
+    const nameInput = document.getElementById('card-name');
+    
+    // Click on preview to trigger file upload (only when no image)
+    preview.addEventListener('click', (e) => {
+        // Don't trigger if clicking on remove button or if dragging
+        if (e.target.id === 'remove-image-btn' || e.target.closest('#remove-image-btn')) {
+            return;
+        }
+        // Only open file picker if no image yet
+        if (!preview.classList.contains('has-image')) {
+            fileInput.click();
+        }
+    });
+    
+    // Double click to change image
+    preview.addEventListener('dblclick', (e) => {
+        if (e.target.id === 'remove-image-btn' || e.target.closest('#remove-image-btn')) {
+            return;
+        }
+        fileInput.click();
+    });
+    
+    // Mouse drag for positioning
+    preview.addEventListener('mousedown', (e) => startImageDrag(e, preview));
+    document.addEventListener('mousemove', (e) => onImageDrag(e));
+    document.addEventListener('mouseup', () => endImageDrag());
+    
+    // Touch drag for positioning
+    preview.addEventListener('touchstart', (e) => startImageDrag(e, preview), { passive: false });
+    document.addEventListener('touchmove', (e) => onImageDrag(e), { passive: false });
+    document.addEventListener('touchend', () => endImageDrag());
+    
+    // Update preview name when typing
+    nameInput.addEventListener('input', updatePreviewName);
+}
+
+function updatePreviewName() {
+    const nameInput = document.getElementById('card-name');
+    const previewName = document.getElementById('preview-card-name');
+    const name = nameInput.value.trim();
+    previewName.textContent = name || 'Nome do Card';
+}
+
+function startImageDrag(e, preview) {
+    // Only start drag if there's an image
+    if (!preview.classList.contains('has-image')) return;
+    
+    // Don't start drag on remove button
+    if (e.target.id === 'remove-image-btn' || e.target.closest('#remove-image-btn')) {
+        return;
+    }
+    
+    e.preventDefault();
+    
+    imageDragState.isDragging = true;
+    imageDragState.startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+    imageDragState.startY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+    imageDragState.startPositionX = currentImagePositionX;
+    imageDragState.startPositionY = currentImagePositionY;
+    
+    preview.classList.add('dragging');
+}
+
+function onImageDrag(e) {
+    if (!imageDragState.isDragging) return;
+    
+    e.preventDefault();
+    
+    const currentX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+    const currentY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+    
+    const diffX = imageDragState.startX - currentX; // Inverted: drag left = show right part
+    const diffY = imageDragState.startY - currentY; // Inverted: drag up = show lower part
+    
+    // Calculate new position (sensitivity based on preview size)
+    const preview = document.getElementById('image-preview');
+    const sensitivityX = 150 / preview.offsetWidth;
+    const sensitivityY = 150 / preview.offsetHeight;
+    
+    let newPositionX = imageDragState.startPositionX + (diffX * sensitivityX);
+    let newPositionY = imageDragState.startPositionY + (diffY * sensitivityY);
+    
+    // Clamp between 0 and 100
+    newPositionX = Math.max(0, Math.min(100, newPositionX));
+    newPositionY = Math.max(0, Math.min(100, newPositionY));
+    
+    currentImagePositionX = newPositionX;
+    currentImagePositionY = newPositionY;
+    
+    // Update preview
+    const previewImg = document.getElementById('preview-img');
+    previewImg.style.objectPosition = `${currentImagePositionX}% ${currentImagePositionY}%`;
+}
+
+function endImageDrag() {
+    if (!imageDragState.isDragging) return;
+    
+    imageDragState.isDragging = false;
+    
+    const preview = document.getElementById('image-preview');
+    preview.classList.remove('dragging');
+}
+
+function getCardImageData() {
+    return {
+        image: currentCardImage,
+        imagePositionX: currentImagePositionX,
+        imagePositionY: currentImagePositionY
+    };
+}
+
+function setCardImageData(image, positionX, positionY) {
+    currentCardImage = image || null;
+    
+    // Handle legacy single position (convert to X=50, Y=position)
+    if (positionY === undefined && positionX !== undefined) {
+        // Legacy: positionX is actually the old single position (Y)
+        if (typeof positionX === 'string') {
+            if (positionX === 'top') currentImagePositionY = 0;
+            else if (positionX === 'bottom') currentImagePositionY = 100;
+            else currentImagePositionY = 50;
+        } else {
+            currentImagePositionY = positionX ?? 50;
+        }
+        currentImagePositionX = 50;
+    } else {
+        currentImagePositionX = positionX ?? 50;
+        currentImagePositionY = positionY ?? 50;
+    }
+    
+    if (currentCardImage) {
+        showImagePreview(currentCardImage);
+    } else {
+        hideImagePreview();
+    }
+}
+
+function clearCardImageData() {
+    currentCardImage = null;
+    currentImagePositionX = 50;
+    currentImagePositionY = 50;
+    hideImagePreview();
+    document.getElementById('card-image').value = '';
 }
 
 // Initialize app when DOM is ready

@@ -237,6 +237,30 @@
                                 <label for="card-description">Descrição</label>
                                 <textarea id="card-description" rows="6" placeholder="Descrição geral..."></textarea>
                             </div>
+                            
+                            <!-- Image Upload Section -->
+                            <div class="form-group">
+                                <label>Imagem do Card (opcional)</label>
+                                <div class="image-upload-container">
+                                    <div class="image-preview" id="image-preview">
+                                        <div class="image-placeholder" id="image-placeholder">
+                                            <span class="placeholder-icon">🖼</span>
+                                            <span class="placeholder-text">Clique para adicionar imagem</span>
+                                        </div>
+                                        <img id="preview-img" src="" alt="Preview" style="display: none;">
+                                        <div class="preview-name-bar" id="preview-name-bar" style="display: none;">
+                                            <span id="preview-card-name">Nome do Card</span>
+                                        </div>
+                                        <button type="button" class="remove-image-btn" id="remove-image-btn" style="display: none;" onclick="removeCardImage()">×</button>
+                                    </div>
+                                    <input type="file" id="card-image" accept="image/*" onchange="handleImageUpload(event)" style="display: none;">
+                                    
+                                    <!-- Image Position Controls -->
+                                    <div class="image-position-controls" id="image-position-controls" style="display: none;">
+                                        <p class="position-hint">👆 Arraste a imagem para ajustar a posição</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Event-specific Fields -->
