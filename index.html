@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Narrative Cards - Worldbuilding Tool</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1 class="logo">
+                    <span class="logo-icon">◇</span>
+                    Narrative Cards
+                </h1>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <button class="nav-btn active" data-view="cards">
+                    <span class="nav-icon">📚</span>
+                    Explorar Cards
+                </button>
+                <button class="nav-btn" data-view="create">
+                    <span class="nav-icon">✦</span>
+                    Criar Novo Card
+                </button>
+            </nav>
+
+            <div class="sidebar-filters">
+                <h3>Filtrar por Tipo</h3>
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="all">Todos</button>
+                    <button class="filter-btn" data-filter="evento">
+                        <span class="type-indicator evento"></span>
+                        Eventos
+                    </button>
+                    <button class="filter-btn" data-filter="local">
+                        <span class="type-indicator local"></span>
+                        Locais
+                    </button>
+                    <button class="filter-btn" data-filter="personagem">
+                        <span class="type-indicator personagem"></span>
+                        Personagens
+                    </button>
+                </div>
+            </div>
+
+            <div class="sidebar-cards-list">
+                <h3>Cards Criados</h3>
+                <div class="search-box">
+                    <input type="text" id="search-cards" placeholder="Buscar cards...">
+                </div>
+                <ul id="cards-list" class="cards-list">
+                    <!-- Cards will be populated here -->
+                </ul>
+            </div>
+
+            <div class="sidebar-actions">
+                <button class="action-btn" onclick="exportCards()" title="Exportar Cards">
+                    <span>📤</span> Exportar
+                </button>
+                <button class="action-btn" onclick="document.getElementById('import-file').click()" title="Importar Cards">
+                    <span>📥</span> Importar
+                </button>
+                <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importCards(event)">
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Breadcrumb Navigation -->
+            <div class="breadcrumb" id="breadcrumb">
+                <span class="breadcrumb-home" onclick="goHome()">Início</span>
+            </div>
+
+            <!-- Cards View -->
+            <section id="cards-view" class="view active">
+                <div class="welcome-screen" id="welcome-screen">
+                    <div class="welcome-content">
+                        <div class="welcome-icon">◇</div>
+                        <h2>Bem-vindo ao Narrative Cards</h2>
+                        <p>Uma ferramenta para organizar suas histórias, campanhas de RPG e mundos fictícios.</p>
+                        <div class="welcome-actions">
+                            <button class="btn-primary" onclick="showView('create')">
+                                <span>✦</span> Criar Primeiro Card
+                            </button>
+                        </div>
+                        <div class="welcome-tips">
+                            <div class="tip">
+                                <span class="tip-icon evento-bg">⚡</span>
+                                <div>
+                                    <strong>Eventos</strong>
+                                    <p>Acontecimentos importantes da narrativa</p>
+                                </div>
+                            </div>
+                            <div class="tip">
+                                <span class="tip-icon local-bg">🏛</span>
+                                <div>
+                                    <strong>Locais</strong>
+                                    <p>Lugares com conexões e personagens</p>
+                                </div>
+                            </div>
+                            <div class="tip">
+                                <span class="tip-icon personagem-bg">👤</span>
+                                <div>
+                                    <strong>Personagens</strong>
+                                    <p>Pessoas com vínculos e histórias</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Display Area -->
+                <div class="card-display" id="card-display">
+                    <!-- Active card will be rendered here -->
+                </div>
+            </section>
+
+            <!-- Create/Edit View -->
+            <section id="create-view" class="view">
+                <div class="create-container">
+                    <div class="create-header">
+                        <h2 id="form-title">Criar Novo Card</h2>
+                        <p class="create-subtitle">Escolha o tipo e preencha as informações</p>
+                    </div>
+
+                    <form id="card-form" class="card-form">
+                        <input type="hidden" id="card-id" value="">
+                        
+                        <!-- Card Type Selection -->
+                        <div class="form-section type-selection">
+                            <label>Tipo do Card</label>
+                            <div class="type-buttons">
+                                <button type="button" class="type-btn" data-type="evento">
+                                    <span class="type-icon">⚡</span>
+                                    <span class="type-name">Evento</span>
+                                    <span class="type-desc">Acontecimento narrativo</span>
+                                </button>
+                                <button type="button" class="type-btn" data-type="local">
+                                    <span class="type-icon">🏛</span>
+                                    <span class="type-name">Local</span>
+                                    <span class="type-desc">Lugar do mundo</span>
+                                </button>
+                                <button type="button" class="type-btn" data-type="personagem">
+                                    <span class="type-icon">👤</span>
+                                    <span class="type-name">Personagem</span>
+                                    <span class="type-desc">Pessoa da história</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Common Fields -->
+                        <div class="form-section" id="common-fields" style="display: none;">
+                            <div class="form-group">
+                                <label for="card-name">Nome *</label>
+                                <input type="text" id="card-name" required placeholder="Nome do card">
+                            </div>
+                            <div class="form-group">
+                                <label for="card-description">Descrição</label>
+                                <textarea id="card-description" rows="6" placeholder="Descrição geral..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Event-specific Fields -->
+                        <div class="form-section type-fields" id="evento-fields" style="display: none;">
+                            <h3 class="section-title">Detalhes do Evento</h3>
+                            <div class="form-group">
+                                <label for="evento-consequences">Consequências Narrativas</label>
+                                <textarea id="evento-consequences" rows="4" placeholder="O que muda após este evento?"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="evento-hooks">Possíveis Ganchos</label>
+                                <textarea id="evento-hooks" rows="4" placeholder="Que desdobramentos podem surgir?"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Location-specific Fields -->
+                        <div class="form-section type-fields" id="local-fields" style="display: none;">
+                            <h3 class="section-title">Detalhes do Local</h3>
+                            <div class="form-group">
+                                <label>Locais Adjacentes</label>
+                                <div class="connection-selector" id="adjacent-locations-selector">
+                                    <div class="selected-connections" id="selected-adjacent"></div>
+                                    <select id="adjacent-locations-select" class="connection-select">
+                                        <option value="">+ Adicionar local adjacente...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Personagens Presentes</label>
+                                <div class="connection-selector" id="present-characters-selector">
+                                    <div class="selected-connections" id="selected-characters"></div>
+                                    <select id="present-characters-select" class="connection-select">
+                                        <option value="">+ Adicionar personagem...</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Character-specific Fields -->
+                        <div class="form-section type-fields" id="personagem-fields" style="display: none;">
+                            <h3 class="section-title">Detalhes do Personagem</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="personagem-occupation">Ocupação</label>
+                                    <input type="text" id="personagem-occupation" placeholder="Ex: Ferreiro, Mago, Mercador">
+                                </div>
+                                <div class="form-group">
+                                    <label for="personagem-age">Idade</label>
+                                    <input type="text" id="personagem-age" placeholder="Ex: 35 anos">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Vínculos (Outros Personagens)</label>
+                                <div class="connection-selector" id="bonds-selector">
+                                    <div class="selected-connections" id="selected-bonds"></div>
+                                    <select id="bonds-select" class="connection-select">
+                                        <option value="">+ Adicionar vínculo...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="personagem-appearance">Aparência</label>
+                                <textarea id="personagem-appearance" rows="3" placeholder="Descrição física do personagem..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="personagem-personality">Personalidade</label>
+                                <textarea id="personagem-personality" rows="3" placeholder="Traços de personalidade, maneirismos..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="personagem-history">História</label>
+                                <textarea id="personagem-history" rows="4" placeholder="Passado e eventos importantes..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="personagem-secrets">Segredos ou Motivações</label>
+                                <textarea id="personagem-secrets" rows="3" placeholder="O que move este personagem? O que esconde?"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions" id="form-actions" style="display: none;">
+                            <button type="button" class="btn-secondary" onclick="resetForm()">Cancelar</button>
+                            <button type="submit" class="btn-primary">
+                                <span id="submit-text">Criar Card</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Card Detail Modal/Overlay for editing -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal-content" id="modal-content">
+            <!-- Modal content will be injected here -->
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
