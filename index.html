@@ -114,9 +114,83 @@
                     </div>
                 </div>
 
-                <!-- Card Display Area -->
-                <div class="card-display" id="card-display">
-                    <!-- Active card will be rendered here -->
+                <!-- Carousel Display Area -->
+                <div class="carousel-container" id="carousel-container">
+                    <!-- Eventos Carousel -->
+                    <div class="carousel-section" id="carousel-eventos">
+                        <div class="carousel-header">
+                            <div class="carousel-title">
+                                <span class="carousel-icon evento">⚡</span>
+                                <h2>Eventos</h2>
+                            </div>
+                            <div class="carousel-nav">
+                                <button class="carousel-arrow left" onclick="scrollCarousel('eventos', -1)">‹</button>
+                                <button class="carousel-arrow right" onclick="scrollCarousel('eventos', 1)">›</button>
+                            </div>
+                        </div>
+                        <div class="carousel-track-wrapper">
+                            <div class="carousel-track" id="track-eventos" data-type="evento">
+                                <!-- Cards will be rendered here -->
+                            </div>
+                        </div>
+                        <div class="carousel-empty" id="empty-eventos">
+                            <span>Nenhum evento criado</span>
+                            <button class="btn-small" onclick="showView('create'); selectTypeFromCarousel('evento')">+ Criar Evento</button>
+                        </div>
+                    </div>
+
+                    <!-- Locais Carousel -->
+                    <div class="carousel-section" id="carousel-locais">
+                        <div class="carousel-header">
+                            <div class="carousel-title">
+                                <span class="carousel-icon local">🏛</span>
+                                <h2>Locais</h2>
+                            </div>
+                            <div class="carousel-nav">
+                                <button class="carousel-arrow left" onclick="scrollCarousel('locais', -1)">‹</button>
+                                <button class="carousel-arrow right" onclick="scrollCarousel('locais', 1)">›</button>
+                            </div>
+                        </div>
+                        <div class="carousel-track-wrapper">
+                            <div class="carousel-track" id="track-locais" data-type="local">
+                                <!-- Cards will be rendered here -->
+                            </div>
+                        </div>
+                        <div class="carousel-empty" id="empty-locais">
+                            <span>Nenhum local criado</span>
+                            <button class="btn-small" onclick="showView('create'); selectTypeFromCarousel('local')">+ Criar Local</button>
+                        </div>
+                    </div>
+
+                    <!-- Personagens Carousel -->
+                    <div class="carousel-section" id="carousel-personagens">
+                        <div class="carousel-header">
+                            <div class="carousel-title">
+                                <span class="carousel-icon personagem">👤</span>
+                                <h2>Personagens</h2>
+                            </div>
+                            <div class="carousel-nav">
+                                <button class="carousel-arrow left" onclick="scrollCarousel('personagens', -1)">‹</button>
+                                <button class="carousel-arrow right" onclick="scrollCarousel('personagens', 1)">›</button>
+                            </div>
+                        </div>
+                        <div class="carousel-track-wrapper">
+                            <div class="carousel-track" id="track-personagens" data-type="personagem">
+                                <!-- Cards will be rendered here -->
+                            </div>
+                        </div>
+                        <div class="carousel-empty" id="empty-personagens">
+                            <span>Nenhum personagem criado</span>
+                            <button class="btn-small" onclick="showView('create'); selectTypeFromCarousel('personagem')">+ Criar Personagem</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Detail Overlay -->
+                <div class="card-detail-overlay" id="card-detail-overlay" onclick="closeCardDetail(event)">
+                    <div class="card-detail-container" id="card-detail-container">
+                        <!-- Detailed card will be rendered here -->
+                    </div>
                 </div>
             </section>
 
@@ -253,6 +327,14 @@
             </section>
         </main>
     </div>
+
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" id="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="Menu">
+        ☰
+    </button>
+
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeMobileMenu()"></div>
 
     <!-- Card Detail Modal/Overlay for editing -->
     <div class="modal-overlay" id="modal-overlay">

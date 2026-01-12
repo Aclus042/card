@@ -108,6 +108,22 @@ class UIController {
         this.selectedType = null;
         this.editingCardId = null;
         
+        // Carousel state
+        this.carouselPositions = {
+            eventos: 0,
+            locais: 0,
+            personagens: 0
+        };
+        
+        // Drag state
+        this.dragState = {
+            isDragging: false,
+            startX: 0,
+            currentX: 0,
+            track: null,
+            startTranslate: 0
+        };
+        
         this.init();
     }
 
@@ -115,6 +131,8 @@ class UIController {
         this.bindEvents();
         this.renderCardsList();
         this.updateWelcomeScreen();
+        this.renderCarousels();
+        this.initCarouselDrag();
     }
 
     bindEvents() {
@@ -167,8 +185,174 @@ class UIController {
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 this.closeModal();
+                this.closeCardDetail();
             }
         });
+    }
+    
+    initCarouselDrag() {
+        const tracks = document.querySelectorAll('.carousel-track');
+        
+        tracks.forEach(track => {
+            // Mouse events
+            track.addEventListener('mousedown', (e) => this.startDrag(e, track));
+            track.addEventListener('mousemove', (e) => this.onDrag(e));
+            track.addEventListener('mouseup', () => this.endDrag());
+            track.addEventListener('mouseleave', () => this.endDrag());
+            
+            // Touch events
+            track.addEventListener('touchstart', (e) => this.startDrag(e, track), { passive: true });
+            track.addEventListener('touchmove', (e) => this.onDrag(e), { passive: true });
+            track.addEventListener('touchend', () => this.endDrag());
+        });
+    }
+    
+    startDrag(e, track) {
+        this.dragState.isDragging = true;
+        this.dragState.track = track;
+        this.dragState.startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        
+        // Get current translate value
+        const transform = window.getComputedStyle(track).transform;
+        if (transform !== 'none') {
+            const matrix = new DOMMatrix(transform);
+            this.dragState.startTranslate = matrix.m41;
+        } else {
+            this.dragState.startTranslate = 0;
+        }
+        
+        track.classList.add('dragging');
+    }
+    
+    onDrag(e) {
+        if (!this.dragState.isDragging) return;
+        
+        const currentX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        const diff = currentX - this.dragState.startX;
+        const newTranslate = this.dragState.startTranslate + diff;
+        
+        this.dragState.track.style.transform = `translateX(${newTranslate}px)`;
+        this.dragState.currentX = currentX;
+    }
+    
+    endDrag() {
+        if (!this.dragState.isDragging) return;
+        
+        const track = this.dragState.track;
+        track.classList.remove('dragging');
+        
+        const diff = this.dragState.currentX - this.dragState.startX;
+        const cardWidth = 220 + 24; // card width + gap
+        const threshold = 50;
+        
+        // Get carousel type from track
+        const type = track.id.replace('track-', '');
+        
+        // Determine scroll direction based on drag
+        if (Math.abs(diff) > threshold) {
+            if (diff > 0) {
+                // Dragged right = go to previous
+                scrollCarousel(type, -1);
+            } else {
+                // Dragged left = go to next
+                scrollCarousel(type, 1);
+            }
+        } else {
+            // Snap back to current position
+            this.updateCarouselPosition(type);
+        }
+        
+        this.dragState.isDragging = false;
+        this.dragState.track = null;
+    }
+    
+    updateCarouselPosition(type) {
+        const track = document.getElementById(`track-${type}`);
+        const cardWidth = 220 + 24;
+        const position = this.carouselPositions[type];
+        track.style.transform = `translateX(-${position * cardWidth}px)`;
+    }
+    
+    renderCarousels() {
+        const eventos = this.dataStore.getCardsByType('evento');
+        const locais = this.dataStore.getCardsByType('local');
+        const personagens = this.dataStore.getCardsByType('personagem');
+        
+        this.renderCarouselTrack('eventos', eventos, 'evento');
+        this.renderCarouselTrack('locais', locais, 'local');
+        this.renderCarouselTrack('personagens', personagens, 'personagem');
+        
+        // Show/hide empty states
+        document.getElementById('empty-eventos').classList.toggle('visible', eventos.length === 0);
+        document.getElementById('empty-locais').classList.toggle('visible', locais.length === 0);
+        document.getElementById('empty-personagens').classList.toggle('visible', personagens.length === 0);
+        
+        // Hide track wrappers if empty
+        document.querySelector('#carousel-eventos .carousel-track-wrapper').style.display = eventos.length > 0 ? 'block' : 'none';
+        document.querySelector('#carousel-locais .carousel-track-wrapper').style.display = locais.length > 0 ? 'block' : 'none';
+        document.querySelector('#carousel-personagens .carousel-track-wrapper').style.display = personagens.length > 0 ? 'block' : 'none';
+    }
+    
+    renderCarouselTrack(trackId, cards, type) {
+        const track = document.getElementById(`track-${trackId}`);
+        
+        if (cards.length === 0) {
+            track.innerHTML = '';
+            return;
+        }
+        
+        track.innerHTML = cards.map(card => this.createFlipCard(card)).join('');
+        
+        // Reset position if needed
+        if (this.carouselPositions[trackId] >= cards.length) {
+            this.carouselPositions[trackId] = Math.max(0, cards.length - 1);
+        }
+        this.updateCarouselPosition(trackId);
+    }
+    
+    createFlipCard(card) {
+        const icon = this.getTypeIcon(card.type);
+        const typeName = this.getTypeName(card.type);
+        
+        // Get meta info
+        let metaHtml = '';
+        if (card.type === 'personagem') {
+            if (card.occupation) {
+                metaHtml += `<span class="flip-card-meta-item">${this.escapeHtml(card.occupation)}</span>`;
+            }
+            if (card.age) {
+                metaHtml += `<span class="flip-card-meta-item">${this.escapeHtml(card.age)}</span>`;
+            }
+        }
+        
+        return `
+            <div class="flip-card" data-card-id="${card.id}" onclick="toggleFlipCard(event, '${card.id}')">
+                <div class="flip-card-inner">
+                    <!-- Back of card (face down) -->
+                    <div class="flip-card-front ${card.type}">
+                        <span class="card-back-symbol">${icon}</span>
+                        <span class="card-back-label">${this.escapeHtml(card.name)}</span>
+                    </div>
+                    
+                    <!-- Front of card (face up - info) -->
+                    <div class="flip-card-back ${card.type}">
+                        <div class="flip-card-header ${card.type}">
+                            <span class="flip-card-type ${card.type}">${icon} ${typeName}</span>
+                            <h3 class="flip-card-title">${this.escapeHtml(card.name)}</h3>
+                        </div>
+                        <div class="flip-card-body">
+                            <p class="flip-card-description">${this.escapeHtml(card.description) || 'Sem descrição'}</p>
+                        </div>
+                        ${metaHtml ? `<div class="flip-card-meta">${metaHtml}</div>` : ''}
+                        <div class="flip-card-footer">
+                            <button class="flip-card-action" onclick="openCardDetail(event, '${card.id}')">
+                                Ver Detalhes →
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     bindConnectionSelectors() {
@@ -250,6 +434,9 @@ class UIController {
 
         // Update breadcrumb
         this.updateBreadcrumb();
+        
+        // Close mobile menu if open
+        closeMobileMenu();
     }
 
     setFilter(filter) {
@@ -296,17 +483,17 @@ class UIController {
 
     updateWelcomeScreen() {
         const welcomeScreen = document.getElementById('welcome-screen');
-        const cardDisplay = document.getElementById('card-display');
+        const carouselContainer = document.getElementById('carousel-container');
         
         const hasCards = this.dataStore.getAllCards().length > 0;
         
-        if (this.currentCard) {
+        if (hasCards) {
             welcomeScreen.style.display = 'none';
-            cardDisplay.classList.add('active');
+            carouselContainer.classList.add('active');
+            this.renderCarousels();
         } else {
             welcomeScreen.style.display = 'flex';
-            cardDisplay.classList.remove('active');
-            cardDisplay.innerHTML = '';
+            carouselContainer.classList.remove('active');
         }
     }
 
@@ -321,23 +508,21 @@ class UIController {
 
         this.currentCard = card;
         this.showView('cards');
-        this.renderCard(card, animation);
+        this.renderCardDetail(card);
         this.renderCardsList();
         this.updateBreadcrumb();
-        this.updateWelcomeScreen();
+        
+        // Close mobile menu if open
+        closeMobileMenu();
     }
 
-    renderCard(card, animation = 'default') {
-        const display = document.getElementById('card-display');
-        display.classList.add('active');
-        document.getElementById('welcome-screen').style.display = 'none';
-
-        let animationClass = 'narrative-card';
-        if (animation === 'left') animationClass += ' card-slide-left';
-        else if (animation === 'right') animationClass += ' card-slide-right';
+    renderCardDetail(card) {
+        const overlay = document.getElementById('card-detail-overlay');
+        const container = document.getElementById('card-detail-container');
 
         let html = `
-            <div class="${animationClass}">
+            <button class="card-detail-close" onclick="closeCardDetail()">×</button>
+            <div class="narrative-card">
                 <div class="card-header ${card.type}">
                     <span class="card-type-badge ${card.type}">
                         ${this.getTypeIcon(card.type)} ${this.getTypeName(card.type)}
@@ -369,7 +554,13 @@ class UIController {
             </div>
         `;
 
-        display.innerHTML = html;
+        container.innerHTML = html;
+        overlay.classList.add('active');
+    }
+
+    renderCard(card, animation = 'default') {
+        // Now renders to detail overlay
+        this.renderCardDetail(card);
     }
 
     renderEventContent(card) {
@@ -678,7 +869,9 @@ class UIController {
         }
 
         this.renderCardsList();
-        this.openCard(card.id);
+        this.renderCarousels();
+        this.showView('cards');
+        this.updateWelcomeScreen();
         this.resetForm();
     }
 
@@ -747,7 +940,9 @@ class UIController {
             this.dataStore.deleteCard(cardId);
             this.showToast('Card excluído', 'info');
             this.currentCard = null;
+            closeCardDetail();
             this.renderCardsList();
+            this.renderCarousels();
             this.updateWelcomeScreen();
             this.updateBreadcrumb();
         }
@@ -887,6 +1082,85 @@ function resetForm() {
     ui.showView('cards');
 }
 
+// Mobile menu functions
+function toggleMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    const toggle = document.getElementById('mobile-menu-toggle');
+    
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('active');
+    
+    // Update button icon
+    if (sidebar.classList.contains('open')) {
+        toggle.textContent = '✕';
+    } else {
+        toggle.textContent = '☰';
+    }
+}
+
+function closeMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    const toggle = document.getElementById('mobile-menu-toggle');
+    
+    sidebar.classList.remove('open');
+    overlay.classList.remove('active');
+    toggle.textContent = '☰';
+}
+
+// Carousel functions
+function scrollCarousel(type, direction) {
+    const track = document.getElementById(`track-${type}`);
+    const cards = track.querySelectorAll('.flip-card');
+    
+    if (cards.length === 0) return;
+    
+    const cardWidth = 220 + 24; // card width + gap
+    const visibleCards = Math.floor(track.parentElement.offsetWidth / cardWidth) || 1;
+    const maxPosition = Math.max(0, cards.length - visibleCards);
+    
+    let newPosition = ui.carouselPositions[type] + direction;
+    newPosition = Math.max(0, Math.min(newPosition, maxPosition));
+    
+    ui.carouselPositions[type] = newPosition;
+    track.style.transform = `translateX(-${newPosition * cardWidth}px)`;
+}
+
+function toggleFlipCard(event, cardId) {
+    // Don't flip if clicking action button
+    if (event.target.closest('.flip-card-action')) return;
+    
+    // Don't flip if dragging
+    if (ui.dragState.isDragging) return;
+    
+    const card = document.querySelector(`.flip-card[data-card-id="${cardId}"]`);
+    if (card) {
+        card.classList.toggle('flipped');
+    }
+}
+
+function openCardDetail(event, cardId) {
+    event.stopPropagation();
+    ui.openCard(cardId);
+}
+
+function closeCardDetail(event) {
+    if (event && event.target !== event.currentTarget) return;
+    
+    const overlay = document.getElementById('card-detail-overlay');
+    overlay.classList.remove('active');
+    ui.currentCard = null;
+    ui.updateBreadcrumb();
+}
+
+function selectTypeFromCarousel(type) {
+    // Small delay to let the view change first
+    setTimeout(() => {
+        ui.selectType(type);
+    }, 100);
+}
+
 function exportCards() {
     const cards = dataStore.getAllCards();
     
@@ -974,6 +1248,7 @@ function importCards(event) {
             });
             
             ui.renderCardsList();
+            ui.renderCarousels();
             ui.updateWelcomeScreen();
             
             ui.showToast(`${imported} cards importados com sucesso!`, 'success');
