@@ -1846,12 +1846,223 @@ textarea {
         padding: var(--spacing-sm) var(--spacing-md);
         font-size: 0.85rem;
     }
+    
+    /* Mobile Sidebar - Simplified */
+    .sidebar-header {
+        padding: var(--spacing-lg);
+    }
+    
+    .logo h1 {
+        font-size: 1.3rem;
+    }
+    
+    .sidebar-nav {
+        padding: var(--spacing-md);
+    }
+    
+    .nav-btn {
+        padding: var(--spacing-md);
+        font-size: 0.95rem;
+    }
+    
+    /* Simplify filters on mobile - horizontal scroll */
+    .filter-section {
+        padding: var(--spacing-md);
+    }
+    
+    .filter-buttons {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: var(--spacing-xs);
+        padding-bottom: var(--spacing-xs);
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .filter-btn {
+        flex-shrink: 0;
+        padding: var(--spacing-xs) var(--spacing-md);
+        font-size: 0.8rem;
+    }
+    
+    /* Compact cards list on mobile */
+    .cards-section {
+        max-height: 35vh;
+    }
+    
+    .sidebar-actions {
+        padding: var(--spacing-md);
+        gap: var(--spacing-sm);
+    }
+    
+    .action-btn {
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: 0.85rem;
+    }
+    
+    /* Carousel Mobile */
+    .carousel-container {
+        padding: var(--spacing-md);
+        gap: var(--spacing-xl);
+    }
+
+    .carousel-section {
+        padding: var(--spacing-md);
+        border-radius: var(--radius-md);
+    }
+
+    .carousel-title h2 {
+        font-size: 1.25rem;
+    }
+
+    .carousel-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 1.1rem;
+    }
+
+    /* Fix flip card for mobile - prevent 3D issues */
+    .flip-card {
+        width: 160px;
+        height: 240px;
+        -webkit-perspective: 800px;
+        perspective: 800px;
+    }
+    
+    .flip-card-inner {
+        -webkit-transform-style: preserve-3d;
+        transform-style: preserve-3d;
+    }
+    
+    .flip-card-front,
+    .flip-card-back {
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+    }
+    
+    .flip-card-back {
+        -webkit-transform: rotateY(180deg);
+        transform: rotateY(180deg);
+    }
+    
+    .flip-card.flipped .flip-card-inner {
+        -webkit-transform: rotateY(180deg);
+        transform: rotateY(180deg);
+    }
+
+    .flip-card-title {
+        font-size: 0.95rem;
+    }
+
+    .flip-card-description {
+        font-size: 0.75rem;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+    }
+    
+    .flip-card-header {
+        padding: var(--spacing-sm);
+    }
+    
+    .flip-card-body {
+        padding: var(--spacing-sm);
+    }
+    
+    .flip-card-footer {
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+    
+    .flip-card-action {
+        font-size: 0.7rem;
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+    
+    .card-back-symbol {
+        font-size: 2.5rem;
+    }
+    
+    .card-back-label {
+        font-size: 0.85rem;
+        max-width: 130px;
+    }
+
+    /* Card Detail Overlay - Mobile optimized */
+    .card-detail-overlay {
+        padding: 0;
+        align-items: flex-end;
+    }
+
+    .card-detail-container {
+        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        max-height: 90vh;
+        margin: 0;
+        width: 100%;
+        position: relative;
+    }
+    
+    .card-detail-container .narrative-card {
+        border-radius: 0;
+        box-shadow: none;
+    }
+    
+    /* Move close button inside container at top */
+    .card-detail-close {
+        position: absolute;
+        top: var(--spacing-md);
+        right: var(--spacing-md);
+        width: 40px;
+        height: 40px;
+        font-size: 1.3rem;
+        background: var(--color-bg-elevated);
+        border: 1px solid var(--color-border-light);
+        box-shadow: var(--shadow-md);
+        z-index: 10;
+    }
+    
+    /* Adjust card header for mobile modal */
+    .card-detail-container .card-header {
+        padding: var(--spacing-lg);
+        padding-top: var(--spacing-2xl);
+        padding-right: 60px;
+    }
+    
+    .card-detail-container .card-title {
+        font-size: 1.3rem;
+        padding-right: 0;
+    }
+    
+    /* Stack card actions below title on mobile */
+    .card-detail-container .card-actions {
+        position: relative;
+        top: auto;
+        right: auto;
+        margin-top: var(--spacing-md);
+        justify-content: flex-start;
+        gap: var(--spacing-sm);
+    }
+    
+    .card-detail-container .card-action-btn {
+        width: auto;
+        height: auto;
+        padding: var(--spacing-sm) var(--spacing-md);
+        border-radius: var(--radius-full);
+        font-size: 0.85rem;
+    }
+    
+    .card-detail-container .card-action-btn::after {
+        content: attr(title);
+        margin-left: var(--spacing-xs);
+    }
+    
+    .card-detail-container .card-body {
+        padding: var(--spacing-lg);
+    }
 }
 
 /* =====================================================
    RESPONSIVE - Small Mobile
    ===================================================== */
-@media (max-width: 400px) {
+@media (max-width: 480px) {
     .main-content {
         padding: var(--spacing-md);
     }
@@ -1874,6 +2085,61 @@ textarea {
     
     .narrative-card {
         border-radius: var(--radius-lg);
+    }
+    
+    /* Flip cards small mobile */
+    .flip-card {
+        width: 140px;
+        height: 210px;
+    }
+    
+    .flip-card-title {
+        font-size: 0.85rem;
+        -webkit-line-clamp: 1;
+        line-clamp: 1;
+    }
+    
+    .flip-card-description {
+        font-size: 0.7rem;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+    }
+    
+    .flip-card-meta {
+        display: none;
+    }
+    
+    .card-back-symbol {
+        font-size: 2rem;
+    }
+    
+    .card-back-label {
+        font-size: 0.75rem;
+        max-width: 110px;
+    }
+
+    .carousel-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-md);
+    }
+
+    .carousel-nav {
+        align-self: flex-end;
+    }
+    
+    .carousel-title h2 {
+        font-size: 1.1rem;
+    }
+    
+    .carousel-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+    }
+    
+    .welcome-actions .btn-primary {
+        width: 100%;
     }
 }
 
@@ -2125,22 +2391,26 @@ textarea {
 .flip-card {
     width: 220px;
     height: 320px;
+    -webkit-perspective: 1000px;
     perspective: 1000px;
     flex-shrink: 0;
-    transform-style: preserve-3d;
 }
 
 .flip-card-inner {
     position: relative;
     width: 100%;
     height: 100%;
+    -webkit-transition: -webkit-transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    -webkit-transform-style: preserve-3d;
     transform-style: preserve-3d;
     cursor: pointer;
+    -webkit-transform-origin: center center;
     transform-origin: center center;
 }
 
 .flip-card.flipped .flip-card-inner {
+    -webkit-transform: rotateY(180deg);
     transform: rotateY(180deg);
 }
 
@@ -2151,15 +2421,15 @@ textarea {
     left: 0;
     width: 100%;
     height: 100%;
-    backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
     border-radius: var(--radius-lg);
     overflow: hidden;
     box-shadow: var(--shadow-md);
     border: 1px solid var(--color-border);
 }
 
-/* Card Back (Face Down) */
+/* Card Back (Face Down - visible initially) */
 .flip-card-front {
     background: var(--color-bg-tertiary);
     display: flex;
@@ -2217,20 +2487,27 @@ textarea {
     line-height: 1.3;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
 
-.flip-card:hover .flip-card-inner {
-    transform: scale(1.02);
-}
+/* Hover effects - only on devices that support hover */
+@media (hover: hover) {
+    .flip-card:hover .flip-card-inner {
+        -webkit-transform: scale(1.02);
+        transform: scale(1.02);
+    }
 
-.flip-card.flipped:hover .flip-card-inner {
-    transform: rotateY(180deg) scale(1.02);
-}
+    .flip-card.flipped:hover .flip-card-inner {
+        -webkit-transform: rotateY(180deg) scale(1.02);
+        transform: rotateY(180deg) scale(1.02);
+    }
 
-.flip-card:hover .card-back-symbol {
-    transform: scale(1.1);
+    .flip-card:hover .card-back-symbol {
+        -webkit-transform: scale(1.1);
+        transform: scale(1.1);
+    }
 }
 
 /* Type-specific back styling */
@@ -2264,6 +2541,7 @@ textarea {
 /* Card Front (Face Up - Info Side) */
 .flip-card-back {
     background: var(--color-bg-card);
+    -webkit-transform: rotateY(180deg);
     transform: rotateY(180deg);
     display: flex;
     flex-direction: column;
@@ -2321,6 +2599,7 @@ textarea {
     line-height: 1.3;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -2337,6 +2616,7 @@ textarea {
     line-height: 1.5;
     display: -webkit-box;
     -webkit-line-clamp: 4;
+    line-clamp: 4;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -2454,69 +2734,4 @@ textarea {
 .card-detail-close:hover {
     background: var(--color-bg-hover);
     color: var(--color-text-primary);
-}
-
-/* =====================================================
-   CAROUSEL RESPONSIVE
-   ===================================================== */
-@media (max-width: 768px) {
-    .carousel-container {
-        padding: var(--spacing-md);
-        gap: var(--spacing-xl);
-    }
-
-    .carousel-section {
-        padding: var(--spacing-md);
-        border-radius: var(--radius-md);
-    }
-
-    .carousel-title h2 {
-        font-size: 1.25rem;
-    }
-
-    .carousel-icon {
-        width: 36px;
-        height: 36px;
-        font-size: 1.1rem;
-    }
-
-    .flip-card {
-        width: 180px;
-        height: 270px;
-    }
-
-    .flip-card-title {
-        font-size: 1rem;
-    }
-
-    .flip-card-description {
-        font-size: 0.8rem;
-        -webkit-line-clamp: 3;
-    }
-
-    .card-detail-overlay {
-        padding: var(--spacing-sm);
-    }
-
-    .card-detail-container {
-        border-radius: var(--radius-lg);
-        max-height: 95vh;
-    }
-}
-
-@media (max-width: 480px) {
-    .flip-card {
-        width: 160px;
-        height: 240px;
-    }
-
-    .carousel-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: var(--spacing-md);
-    }
-
-    .carousel-nav {
-        align-self: flex-end;
-    }
 }
