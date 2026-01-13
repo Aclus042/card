@@ -466,7 +466,8 @@ class UIController {
             if (!this.currentCard) {
                 this.updateWelcomeScreen();
             }
-        } else if (view === 'create') {
+        } else if (view === 'create' && !this.editingCardId) {
+            // Only reset form if not editing
             this.resetForm();
         }
 
@@ -499,6 +500,14 @@ class UIController {
         if (this.currentFilter !== 'all') {
             filteredCards = filteredCards.filter(c => c.type === this.currentFilter);
         }
+
+        // Sort by type (evento, local, personagem) then by name
+        const typeOrder = { 'evento': 0, 'local': 1, 'personagem': 2 };
+        filteredCards.sort((a, b) => {
+            const typeCompare = (typeOrder[a.type] || 99) - (typeOrder[b.type] || 99);
+            if (typeCompare !== 0) return typeCompare;
+            return a.name.localeCompare(b.name);
+        });
 
         if (filteredCards.length === 0) {
             list.innerHTML = `
