@@ -1041,22 +1041,7 @@ class UIController {
     }
 
     updateBreadcrumb() {
-        const breadcrumb = document.getElementById('breadcrumb');
-        let html = `<span class="breadcrumb-home" onclick="goHome()">Início</span>`;
-
-        if (this.currentView === 'create') {
-            html += `
-                <span class="breadcrumb-separator">›</span>
-                <span class="breadcrumb-item">${this.editingCardId ? 'Editar Card' : 'Criar Card'}</span>
-            `;
-        } else if (this.currentCard) {
-            html += `
-                <span class="breadcrumb-separator">›</span>
-                <span class="breadcrumb-item">${this.escapeHtml(this.currentCard.name)}</span>
-            `;
-        }
-
-        breadcrumb.innerHTML = html;
+        // Breadcrumb removed - function kept for compatibility
     }
 
     showToast(message, type = 'info') {
