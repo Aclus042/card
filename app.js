@@ -1319,6 +1319,7 @@ function closeCardDetail(event) {
     overlay.classList.remove('active');
     ui.currentCard = null;
     ui.updateBreadcrumb();
+    ui.renderCardsList();
 }
 
 function selectTypeFromCarousel(type) {
