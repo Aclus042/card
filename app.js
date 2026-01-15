@@ -578,10 +578,11 @@ class UIController {
         }
 
         // Sort by type (evento, local, personagem) then by number
-        const typeOrder = { 'evento': 0, 'local': 1, 'personagem': 2 };
+        const typeOrder = { 'evento': 1, 'local': 2, 'personagem': 3 };
         filteredCards.sort((a, b) => {
-            const typeCompare = (typeOrder[a.type] || 99) - (typeOrder[b.type] || 99);
-            if (typeCompare !== 0) return typeCompare;
+            const aOrder = typeOrder[a.type] || 99;
+            const bOrder = typeOrder[b.type] || 99;
+            if (aOrder !== bOrder) return aOrder - bOrder;
             return (a.number || 999) - (b.number || 999);
         });
 
