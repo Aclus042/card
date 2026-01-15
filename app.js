@@ -17,7 +17,67 @@ class DataStore {
         return 'card_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     }
 
+    // Get the next available number for a card type
+    getNextNumber(type) {
+        const cardsOfType = this.cards.filter(c => c.type === type);
+        if (cardsOfType.length === 0) return 1;
+        const maxNumber = Math.max(...cardsOfType.map(c => c.number || 0));
+        return maxNumber + 1;
+    }
+
+    // Assign numbers to cards that don't have them (legacy cards)
+    ensureAllCardsHaveNumbers() {
+        const types = ['evento', 'local', 'personagem'];
+        
+        types.forEach(type => {
+            const cardsOfType = this.cards
+                .filter(c => c.type === type)
+                .sort((a, b) => {
+                    // Sort by createdAt date, oldest first
+                    const dateA = new Date(a.createdAt || 0);
+                    const dateB = new Date(b.createdAt || 0);
+                    return dateA - dateB;
+                });
+            
+            let nextNumber = 1;
+            cardsOfType.forEach(card => {
+                if (!card.number || card.number < 1) {
+                    card.number = nextNumber;
+                }
+                nextNumber = Math.max(nextNumber, card.number) + 1;
+            });
+        });
+    }
+
+    // Reorganize numbers when there's a conflict
+    reorganizeNumbers(type, newNumber, excludeId = null) {
+        const cardsOfType = this.cards
+            .filter(c => c.type === type && c.id !== excludeId)
+            .sort((a, b) => (a.number || 0) - (b.number || 0));
+        
+        // Find cards that need to be shifted
+        cardsOfType.forEach(card => {
+            if (card.number >= newNumber) {
+                card.number = card.number + 1;
+                card.updatedAt = new Date().toISOString();
+            }
+        });
+    }
+
     createCard(cardData) {
+        // Handle numbering
+        if (!cardData.number || cardData.number < 1) {
+            cardData.number = this.getNextNumber(cardData.type);
+        } else {
+            // Check if number already exists for this type
+            const existingCard = this.cards.find(
+                c => c.type === cardData.type && c.number === cardData.number
+            );
+            if (existingCard) {
+                this.reorganizeNumbers(cardData.type, cardData.number);
+            }
+        }
+
         const card = {
             id: this.generateId(),
             createdAt: new Date().toISOString(),
@@ -31,6 +91,22 @@ class DataStore {
     updateCard(id, cardData) {
         const index = this.cards.findIndex(c => c.id === id);
         if (index !== -1) {
+            const existingCard = this.cards[index];
+            
+            // Handle numbering on update
+            if (cardData.number && cardData.number !== existingCard.number) {
+                // Check if new number already exists for this type
+                const conflictCard = this.cards.find(
+                    c => c.type === cardData.type && c.number === cardData.number && c.id !== id
+                );
+                if (conflictCard) {
+                    this.reorganizeNumbers(cardData.type, cardData.number, id);
+                }
+            } else if (!cardData.number) {
+                // Keep existing number if not provided
+                cardData.number = existingCard.number;
+            }
+
             this.cards[index] = {
                 ...this.cards[index],
                 ...cardData,
@@ -501,12 +577,12 @@ class UIController {
             filteredCards = filteredCards.filter(c => c.type === this.currentFilter);
         }
 
-        // Sort by type (evento, local, personagem) then by name
+        // Sort by type (evento, local, personagem) then by number
         const typeOrder = { 'evento': 0, 'local': 1, 'personagem': 2 };
         filteredCards.sort((a, b) => {
             const typeCompare = (typeOrder[a.type] || 99) - (typeOrder[b.type] || 99);
             if (typeCompare !== 0) return typeCompare;
-            return a.name.localeCompare(b.name);
+            return (a.number || 999) - (b.number || 999);
         });
 
         if (filteredCards.length === 0) {
@@ -519,13 +595,40 @@ class UIController {
             return;
         }
 
-        list.innerHTML = filteredCards.map(card => `
-            <li class="card-list-item ${this.currentCard && this.currentCard.id === card.id ? 'active' : ''}" 
-                onclick="ui.openCard('${card.id}')">
-                <span class="type-dot ${card.type}"></span>
-                <span class="card-name">${this.escapeHtml(card.name)}</span>
-            </li>
-        `).join('');
+        // Group by type and render with category headers
+        const typeNames = {
+            'evento': { name: 'Eventos', icon: '📅' },
+            'local': { name: 'Locais', icon: '🏛' },
+            'personagem': { name: 'Personagens', icon: '👤' }
+        };
+
+        let html = '';
+        let currentType = null;
+
+        filteredCards.forEach(card => {
+            // Add category header when type changes
+            if (card.type !== currentType && this.currentFilter === 'all') {
+                currentType = card.type;
+                const typeInfo = typeNames[card.type] || { name: card.type, icon: '📄' };
+                html += `
+                    <li class="card-list-category ${card.type}">
+                        <span class="card-list-category-icon">${typeInfo.icon}</span>
+                        ${typeInfo.name}
+                    </li>
+                `;
+            }
+
+            html += `
+                <li class="card-list-item ${this.currentCard && this.currentCard.id === card.id ? 'active' : ''}" 
+                    onclick="ui.openCard('${card.id}')">
+                    <span class="card-number">${card.number || ''}</span>
+                    <span class="type-dot ${card.type}"></span>
+                    <span class="card-name">${this.escapeHtml(card.name)}</span>
+                </li>
+            `;
+        });
+
+        list.innerHTML = html;
     }
 
     updateWelcomeScreen() {
@@ -818,6 +921,10 @@ class UIController {
         document.getElementById('common-fields').style.display = 'block';
         document.getElementById('form-actions').style.display = 'flex';
 
+        // Update number placeholder to show next available number
+        const nextNumber = this.dataStore.getNextNumber(type);
+        document.getElementById('card-number').placeholder = nextNumber;
+
         // Hide all type-specific fields
         document.querySelectorAll('.type-fields').forEach(el => {
             el.style.display = 'none';
@@ -886,9 +993,14 @@ class UIController {
         // Get image data
         const imageData = getCardImageData();
 
+        // Get card number
+        const numberInput = document.getElementById('card-number').value;
+        const cardNumber = numberInput ? parseInt(numberInput, 10) : null;
+
         const cardData = {
             type: this.selectedType,
             name: name,
+            number: cardNumber,
             description: document.getElementById('card-description').value.trim(),
             image: imageData.image,
             imagePositionX: imageData.imagePositionX,
@@ -944,6 +1056,7 @@ class UIController {
 
         // Populate common fields
         document.getElementById('card-name').value = card.name || '';
+        document.getElementById('card-number').value = card.number || '';
         document.getElementById('card-description').value = card.description || '';
         
         // Load image data (handle legacy single position)
@@ -1114,6 +1227,9 @@ function initApp() {
     dataStore = new DataStore();
     ui = new UIController(dataStore);
     initImageUpload();
+    
+    // Ensure all existing cards have numbers (for legacy data)
+    dataStore.ensureAllCardsHaveNumbers();
 }
 
 function showView(view) {
@@ -1290,12 +1406,20 @@ function importCards(event) {
                         .filter(id => id);
                 }
                 
+                // Assign number if not present
+                if (!newCard.number) {
+                    newCard.number = dataStore.getNextNumber(newCard.type);
+                }
+                
                 newCard.createdAt = new Date().toISOString();
                 newCard.updatedAt = new Date().toISOString();
                 
                 dataStore.cards.push(newCard);
                 imported++;
             });
+            
+            // Ensure all cards have proper numbers
+            dataStore.ensureAllCardsHaveNumbers();
             
             ui.renderCardsList();
             ui.renderCarousels();

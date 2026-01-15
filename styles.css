@@ -401,6 +401,53 @@ a:hover {
     gap: var(--spacing-xs);
 }
 
+/* Category headers in cards list */
+.card-list-category {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-top: var(--spacing-md);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--color-text-muted);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.card-list-category:first-child {
+    margin-top: 0;
+}
+
+.card-list-category.evento {
+    color: var(--color-evento);
+    border-bottom-color: var(--color-evento-border);
+}
+
+.card-list-category.local {
+    color: var(--color-local);
+    border-bottom-color: var(--color-local-border);
+}
+
+.card-list-category.personagem {
+    color: var(--color-personagem);
+    border-bottom-color: var(--color-personagem-border);
+}
+
+.card-list-category-icon {
+    font-size: 0.9rem;
+}
+
+/* Card number in list */
+.card-number {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    min-width: 20px;
+    text-align: right;
+}
+
 .card-list-item {
     display: flex;
     align-items: center;
@@ -1474,11 +1521,32 @@ a:hover {
 
 .form-row {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr auto;
     gap: var(--spacing-lg);
+    align-items: start;
+}
+
+.form-group-small {
+    width: 100px;
+}
+
+.form-group-small label {
+    white-space: nowrap;
+}
+
+.form-group-small input {
+    text-align: center;
+    -moz-appearance: textfield;
+}
+
+.form-group-small input::-webkit-outer-spin-button,
+.form-group-small input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 input[type="text"],
+input[type="number"],
 textarea,
 select {
     width: 100%;
@@ -2609,6 +2677,11 @@ textarea {
 .flip-card.flipped .flip-card-inner {
     -webkit-transform: rotateY(180deg);
     transform: rotateY(180deg);
+}
+
+/* When flipped, disable pointer events on the back side (image side) */
+.flip-card.flipped .flip-card-front {
+    pointer-events: none;
 }
 
 .flip-card-front,

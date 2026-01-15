@@ -224,9 +224,15 @@
 
                         <!-- Common Fields -->
                         <div class="form-section" id="common-fields" style="display: none;">
-                            <div class="form-group">
-                                <label for="card-name">Nome *</label>
-                                <input type="text" id="card-name" required placeholder="Nome do card">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="card-name">Nome *</label>
+                                    <input type="text" id="card-name" required placeholder="Nome do card">
+                                </div>
+                                <div class="form-group form-group-small">
+                                    <label for="card-number">Número</label>
+                                    <input type="number" id="card-number" min="1">
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label for="card-description">Descrição</label>
