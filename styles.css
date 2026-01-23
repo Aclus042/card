@@ -2695,6 +2695,8 @@ textarea {
     height: 100%;
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
+    -webkit-transform-style: preserve-3d;
+    transform-style: preserve-3d;
     border-radius: var(--radius-lg);
     overflow: hidden;
     box-shadow: var(--shadow-md);
@@ -2710,6 +2712,9 @@ textarea {
     justify-content: center;
     gap: var(--spacing-md);
     position: relative;
+    /* Firefox fix: explicit transform needed for backface-visibility to work */
+    -webkit-transform: rotateY(0deg);
+    transform: rotateY(0deg);
 }
 
 .flip-card-front::before {
